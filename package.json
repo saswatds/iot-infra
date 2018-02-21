@@ -1,0 +1,12 @@
+{
+  "name": "iot-infra",
+  "version": "0.0.1",
+  "description": "IoT backend infrastructure with MQTT",
+  "main": "src/app.js",
+  "repository": "git@github.com:saswatds/iot-infra.git",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "author": "Saswat Das <saswatds@gmail.com>",
+  "license": "UNLICENSED"
+}
