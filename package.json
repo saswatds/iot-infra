@@ -33,10 +33,16 @@
     "@feathersjs/express": "^1.2.0",
     "@feathersjs/feathers": "^3.1.3",
     "@feathersjs/socketio": "^3.2.0",
+    "async": "^2.6.0",
     "compression": "^1.7.2",
     "cors": "^2.8.4",
+    "feathers-mongoose": "^6.1.0",
     "helmet": "^3.11.0",
+    "lodash": "^4.17.5",
+    "mongoose": "^5.0.6",
+    "mqtt": "^2.15.3",
     "serve-favicon": "^2.4.5",
+    "uuid": "^3.2.1",
     "winston": "^2.4.0"
   },
   "devDependencies": {
