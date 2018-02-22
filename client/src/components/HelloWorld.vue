@@ -55,6 +55,11 @@ export default {
       this.$store.dispatch('pipeline/create', pipeline);
     }
   },
+
+  beforeCreate () {
+    this.$store.dispatch('pipeline/find');
+  }
+
 };
 </script>
 
