@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+- '8'
+- '6'
+cache:
+  directories:
+  - node_modules
+deploy:
+  provider: heroku
+  api_key:
+    secure: vqQU2rqhBKSU/lQ3l6dpNiIA5bK3cOTolYTfAulvdGIICUnOM0PBlv2mWQYqHEIV/+b72/0YQyHq9PK3eQlzEp9V9V/KrdWZD5mv496aJM9wkoPclcNrd/0WPhxt/PG/VsLAS8DzNKGXg4/IIVM4b2lj+GJ8WMrVoJbqH8u6ugbaT0DPdUgkjf2Op+Crl3b8EVkHZy5uReu09JCcCGCw8/tTSs3V+sDPAqSOgurTcL5ma63ymLA/dL5XkdCa2/TuBR8+JPvNui7mrMikFfS/z4DZ8mKUXKTqRqJ7FliE2uW16bsVjB3TE50jWmlSMGsiUDCTLXaSjQ5OmabVIsMtL/rPOHB/OKPqhYYXKQpZ3lptj8pWSWiDwOu7ET5YTqs7PgWLSOX0CiOBjDQLfxz2qjyVAK3GkH0eSMB3LSXUfIiORHnjy+WohE4peu+ZuJxudmGqg8MorWh32RQWMSqMPwXZAuCfCcDRe8JI2sklAyUL7wyWHF29llc5vJNjmh0oLQk8TzmDJs9A0L5LMnyPllelM/66XJutrk8bQD0mgLy6RCkSqBLfd9JAHAuIWjpbavt++mYIg5LY1ZiiehRyv4xX88ZQo6YiadXsqKB+oXxtv+eMRi28gWRAh90kP8NEF82JsP3y6SoxyuEqpu4I5lC+oFL6LlO5GBtlCLmXgHw=
+  app: iot-infra
+  on:
+    repo: saswatds/iot-infra
