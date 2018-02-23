@@ -1,0 +1,54 @@
+{
+  "name": "iot-infra",
+  "description": "Backend service for an MQTT based IoT project",
+  "version": "0.0.0",
+  "homepage": "",
+  "main": "src",
+  "keywords": [
+    "feathers"
+  ],
+  "author": {
+    "name": "Saswat Das",
+    "email": "saswat.das@postmanlabs.com"
+  },
+  "contributors": [],
+  "bugs": {},
+  "directories": {
+    "lib": "src",
+    "test": "test/"
+  },
+  "engines": {
+    "node": "^9.0.0",
+    "yarn": ">= 0.18.0"
+  },
+  "scripts": {
+    "test": "npm run eslint && npm run mocha",
+    "eslint": "eslint src/. test/. --config .eslintrc.json",
+    "start": "node src/",
+    "mocha": "mocha test/ --recursive --exit"
+  },
+  "dependencies": {
+    "@feathersjs/configuration": "^1.0.2",
+    "@feathersjs/errors": "^3.3.0",
+    "@feathersjs/express": "^1.2.0",
+    "@feathersjs/feathers": "^3.1.3",
+    "@feathersjs/socketio": "^3.2.0",
+    "async": "^2.6.0",
+    "compression": "^1.7.2",
+    "cors": "^2.8.4",
+    "feathers-mongoose": "^6.1.0",
+    "helmet": "^3.11.0",
+    "lodash": "^4.17.5",
+    "mongoose": "^5.0.6",
+    "mqtt": "^2.15.3",
+    "serve-favicon": "^2.4.5",
+    "uuid": "^3.2.1",
+    "winston": "^2.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.18.1",
+    "mocha": "^5.0.1",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2"
+  }
+}
