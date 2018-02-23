@@ -38,7 +38,10 @@ class MQTT {
         });
 
       async.parallel(parallelPipelines, (err, results)=> {
-        logger.info(results);
+        if(err) {
+          this.app.service('log').create({message: err.toString()});
+        }
+        logger.info('processed topic:', topic, results);
       });
     }
   }
@@ -50,14 +53,15 @@ class MQTT {
 
     topicOutputs.forEach((topic)=>this.client.publish(topic, dataString));
     async.map(oppOutputs, (topic, cb)=> {
-      (topic === 'log') && this.app.service('log').create({message: dataString}, cb);
+      (topic === 'log') && this.app.service('log').create({message: dataString});
+      cb();
     }, cb);
   }
 
   updateListener(data) {
     const { id, input, output, operations } = data;
     _.each(input, (inp)=> {
-      _.isArray(this.listeners[inp]) && this.listeners[inp].push({id, operations, output}) ||
+      _.isArray(this.listeners[inp]) && _.union(this.listeners[inp], {id, operations, output}) ||
         (this.listeners[inp] = [{id, operations, output}]);
     });
   }
