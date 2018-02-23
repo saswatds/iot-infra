@@ -1,12 +1,14 @@
 const mqtt = require('mqtt'),
   logger = require('winston'),
   _ = require('lodash'),
-  async = require('async');
+  async = require('async'),
+  OPP_TOPICS = ['log'];
 
 class MQTT {
-  constructor(url) {
+  constructor(url, app) {
     this.url = url;
     this.listeners = {};
+    this.app = app;
   }
   connect () {
     this.client = mqtt.connect(this.url);
@@ -41,8 +43,15 @@ class MQTT {
     }
   }
 
-  _finalizer(outputs, data, cb) {
-    cb(null);
+  _finalizer(output, data, cb) {
+    const oppOutputs = _.intersection(output, OPP_TOPICS),
+      topicOutputs = _.difference(output, OPP_TOPICS),
+      dataString = data && data.toString && data.toString() || JSON.stringify(data)|| '';
+
+    topicOutputs.forEach((topic)=>this.client.publish(topic, dataString));
+    async.map(oppOutputs, (topic, cb)=> {
+      (topic === 'log') && this.app.service('log').create({message: dataString}, cb);
+    }, cb);
   }
 
   updateListener(data) {
