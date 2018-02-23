@@ -1,12 +1,14 @@
 const mqtt = require('mqtt'),
   logger = require('winston'),
   _ = require('lodash'),
-  async = require('async');
+  async = require('async'),
+  OPP_TOPICS = ['log'];
 
 class MQTT {
-  constructor(url) {
+  constructor(url, app) {
     this.url = url;
     this.listeners = {};
+    this.app = app;
   }
   connect () {
     this.client = mqtt.connect(this.url);
@@ -36,19 +38,30 @@ class MQTT {
         });
 
       async.parallel(parallelPipelines, (err, results)=> {
-        logger.info(results);
+        if(err) {
+          this.app.service('log').create({message: err.toString()});
+        }
+        logger.info('processed topic:', topic, results);
       });
     }
   }
 
-  _finalizer(outputs, data, cb) {
-    cb(null);
+  _finalizer(output, data, cb) {
+    const oppOutputs = _.intersection(output, OPP_TOPICS),
+      topicOutputs = _.difference(output, OPP_TOPICS),
+      dataString = data && data.toString && data.toString() || JSON.stringify(data)|| '';
+
+    topicOutputs.forEach((topic)=>this.client.publish(topic, dataString));
+    async.map(oppOutputs, (topic, cb)=> {
+      (topic === 'log') && this.app.service('log').create({message: dataString});
+      cb();
+    }, cb);
   }
 
   updateListener(data) {
     const { id, input, output, operations } = data;
     _.each(input, (inp)=> {
-      _.isArray(this.listeners[inp]) && this.listeners[inp].push({id, operations, output}) ||
+      _.isArray(this.listeners[inp]) && _.union(this.listeners[inp], {id, operations, output}) ||
         (this.listeners[inp] = [{id, operations, output}]);
     });
   }
