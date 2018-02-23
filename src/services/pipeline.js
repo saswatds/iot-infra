@@ -11,6 +11,13 @@ class Pipeline extends Service{
     this.MQTT = MQTT;
   }
 
+  find(params) {
+    return super.find(params).then((data)=> {
+      data.forEach((d)=> this.MQTT.updateListener(this.preprocess(d._id, d)));
+      return Promise.resolve(data);
+    });
+  }
+
   create(data, params) {
     /**
      * @property name - name of the pipeline
@@ -56,7 +63,7 @@ class Pipeline extends Service{
     const mappedFunctions = _.map(operations, (opp)=> {
       return new Function('data', 'done', opp.func || '');
     });
-    return {id: input, output, operations: mappedFunctions};
+    return {id, input, output, operations: mappedFunctions};
   }
 }
 
