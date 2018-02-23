@@ -14,7 +14,9 @@
       Output topic:
       <input type="text" v-model="output" placeholder="log">
       <br>
-      function (data, callback) => {<br>
+      <br>
+      // @function done(err, response) <br>
+      function (data, done) {<br>
       <textarea v-model.lazy="code"></textarea>
       <br>
       }
