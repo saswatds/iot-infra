@@ -7,9 +7,7 @@ const {Pipeline} = require('./pipeline'),
 module.exports = function (app) {
   mongoose.Promise = global.Promise;
   // Connect to your MongoDB instance(s)
-  mongoose.connect('mongodb://localhost:27017/feathers', {
-    useMongoClient: true
-  });
+  mongoose.connect(app.get('mongodb'));
 
   const mqtt = new MQTT(app.get('mqtt'));
   const pipeline = new Pipeline({Model: PipelineModel, lean: true}, mqtt);

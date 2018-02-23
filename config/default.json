@@ -6,5 +6,6 @@
     "default": 10,
     "max": 50
   },
-  "mqtt" : "mqtt://iouser:password@m10.cloudmqtt.com:19594"
+  "mqtt" : "mqtt://iouser:password@m10.cloudmqtt.com:19594",
+  "mongodb": "mongodb://admin:password@ds123728.mlab.com:23728/micro-test"
 }
