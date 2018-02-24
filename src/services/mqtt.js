@@ -90,6 +90,7 @@ class MQTT {
     this.listeners = _.omitBy(this.listeners, (listener)=> {
       return listener.id === data.id;
     });
+    logger.info('removed', this.listeners);
   }
 }
 
