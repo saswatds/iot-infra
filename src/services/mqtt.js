@@ -23,9 +23,6 @@ class MQTT {
     this.listeners = {};
     this.app = app;
   }
-  log(o) {
-    this.app.service('log').create(o);
-  }
   connect () {
     this.client = mqtt.connect(this.url);
     this.client.on('message', (topic, message)=> {
@@ -57,12 +54,13 @@ class MQTT {
       try {
         async.parallel(parallelPipelines, (err, results)=> {
           if(err) {
-            this.log({origin: 'ERROR', message: err.toString()});
+            this.app.service('log').create({origin: 'ERROR', message: err.toString()});
+            return logger.error(err);
           }
           logger.info('processed topic:', topic, results);
         });
       } catch (err) {
-        this.log({origin: 'CRITICAL', message: err.toString()});
+        this.app.service('log').create({origin: 'CRITICAL', message: err.toString()});
         logger.error(err);
       }
     }
@@ -75,9 +73,9 @@ class MQTT {
 
     topicOutputs.forEach((topic)=>this.client.publish(topic, dataString));
     oppOutputs.forEach((topic)=> {
-      (topic === 'log') && this.log({origin: _.toUpper(name), message: dataString});
+      (topic === 'log') && this.app.service('log').create({origin: _.toUpper(name), message: dataString});
     });
-    cb();
+    cb(data);
   }
 
   updateListener(data) {
