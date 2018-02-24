@@ -4,6 +4,23 @@ const mqtt = require('mqtt'),
   async = require('async'),
   OPP_TOPICS = ['log'];
 
+const  context = Object.create({
+  _: _,
+  async: async,
+  process: null,
+  __filename: null,
+  __dirname: null,
+  console: null,
+  exports: null,
+  global: null,
+  module: null,
+  require: null
+});
+
+const log = (o) => {
+  this.app.service('log').create(o);
+};
+
 class MQTT {
   constructor(url, app) {
     this.url = url;
@@ -31,18 +48,24 @@ class MQTT {
       // This the place where we can spawn muliple processes, etc, job definations
       const starterFunction = (cb)=> cb(null, message),
         parallelPipelines = _(pipelines).map((pipeline)=> {
-          const waterFalls =  _.concat([], starterFunction, pipeline.operations, this._finalizer.bind(this, pipeline));
+          const operations = _.map(pipeline.operations, (opp)=> opp.bind(context)),
+            waterFalls =  _.concat([], starterFunction, operations, this._finalizer.bind(this, pipeline));
           return async.reflect((cb)=> {
             async.waterfall(waterFalls,cb);
           });
         });
 
-      async.parallel(parallelPipelines, (err, results)=> {
-        if(err) {
-          this.app.service('log').create({origin: 'error', message: err.toString()});
-        }
-        logger.info('processed topic:', topic, results);
-      });
+      try {
+        async.parallel(parallelPipelines, (err, results)=> {
+          if(err) {
+            log({origin: 'ERROR', message: err.toString()});
+          }
+          logger.info('processed topic:', topic, results);
+        });
+      } catch (err) {
+        log({origin: 'CRITICAL', message: err.toString()});
+        logger.error(err);
+      }
     }
   }
 
@@ -53,7 +76,7 @@ class MQTT {
 
     topicOutputs.forEach((topic)=>this.client.publish(topic, dataString));
     oppOutputs.forEach((topic)=> {
-      (topic === 'log') && this.app.service('log').create({origin:name, message: dataString});
+      (topic === 'log') && log({origin: _.toUpper(name), message: dataString});
     });
     cb();
   }
