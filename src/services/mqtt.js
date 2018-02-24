@@ -52,10 +52,10 @@ class MQTT {
       dataString = data && data.toString && data.toString() || JSON.stringify(data)|| '';
 
     topicOutputs.forEach((topic)=>this.client.publish(topic, dataString));
-    async.map(oppOutputs, (topic, cb)=> {
+    oppOutputs.forEach((topic)=> {
       (topic === 'log') && this.app.service('log').create({origin:name, message: dataString});
-      cb();
-    }, cb);
+    });
+    cb();
   }
 
   updateListener(data) {
