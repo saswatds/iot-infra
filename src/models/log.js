@@ -3,6 +3,7 @@ const mongoose = require('mongoose'),
 
 const LogSchema = new Schema({
   message: String,
+  origin: String,
   timestamp: {
     type: Date,
     default: Date.now()

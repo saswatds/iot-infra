@@ -45,7 +45,14 @@
           </el-form>
         </el-col>
         <el-col :md="24" :lg="12">
-          <pipeline></pipeline>
+          <el-switch
+            style="float: right"
+            v-model="mode"
+            active-text="Logs"
+            inactive-text="Pipelines">
+          </el-switch>
+          <log v-if="mode"></log>
+          <pipeline v-else></pipeline>
         </el-col>
       </el-row>
     </el-main>
@@ -55,11 +62,13 @@
 <script>
 import editor from 'vue2-ace-editor'
 import Pipeline from '@/components/Pipeline'
+import Log from '@/components/Log'
 export default {
   name: 'Home',
   components: {
     editor,
-    Pipeline
+    Pipeline,
+    Log
   },
   data() {
     return {
@@ -69,6 +78,7 @@ export default {
         output: [],
         code: ''
       },
+      mode: false,
       doneRegx: /done\(([\sa-zA-Z"']+),([\sa-zA-Z0-9\(\)"'\{\}:]+)\)/
     };
   },
@@ -86,7 +96,7 @@ export default {
         input: this.pipelineForm.input,
         output: this.pipelineForm.output,
         operations: [{
-          name: 'tigger',
+          name: 'trigger',
           func: this.pipelineForm.code,
         }]
       });

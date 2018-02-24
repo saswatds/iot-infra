@@ -1,8 +1,8 @@
 <template>
-  <div>
-    <p v-for="log in logs" :key="log.timestamp">
-      {{log.message}}
-    </p>
+  <div style="margin:20px">
+    <span v-for="(log, index) in logs" :key="log.timestamp">
+      {{log.origin || index+1}} : {{log.message}}<br>
+    </span>
   </div>
 </template>
 

@@ -51,7 +51,7 @@ class Pipeline extends Service{
 
   preprocess(id, data) {
     // in this step we take all the operations and apply them in order
-    const {input, output, operations} = data;
+    const {input, output, operations, name} = data;
 
     /**
      * operations = {
@@ -63,7 +63,7 @@ class Pipeline extends Service{
     const mappedFunctions = _.map(operations, (opp)=> {
       return new Function('data', 'done', opp.func || '');
     });
-    return {id, input, output, operations: mappedFunctions};
+    return {id,name, input, output, operations: mappedFunctions};
   }
 }
 
