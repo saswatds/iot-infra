@@ -91,7 +91,7 @@ export default {
         }]
       });
       console.log('creating new pipeline');
-      // this.$store.dispatch('pipeline/create', pipeline);
+      this.$store.dispatch('pipeline/create', pipeline);
     },
     resetForm(formName) {
         console.log(formName);
