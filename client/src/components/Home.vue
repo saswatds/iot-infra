@@ -13,8 +13,13 @@
                   v-model="pipelineForm.input"
                   multiple
                   filterable
-                  allow-create
                   placeholder="Choose input topics">
+                  <el-option
+                    v-for="item in options.input"
+                    :key="item.topic"
+                    :label="item.topic"
+                    :value="item.topic">
+                  </el-option>
                 </el-select>
             </el-form-item>
              <el-form-item label="Outputs" prop="output">
@@ -22,9 +27,15 @@
                   v-model="pipelineForm.output"
                   multiple
                   filterable
-                  allow-create
                   placeholder="Choose output topics">
                   <el-option label="log" value="log"></el-option>
+                  <el-option label="store" value="store"></el-option>
+                  <el-option
+                    v-for="item in options.output"
+                    :key="item.topic"
+                    :label="item.topic"
+                    :value="item.topic">
+                  </el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="Function" prop="code">
@@ -79,8 +90,16 @@ export default {
         code: ''
       },
       mode: false,
-      doneRegx: /done\(([\sa-zA-Z"']+),([\sa-zA-Z0-9\(\)"'\{\}:]+)\)/
+      doneRegx: /done\(([\sa-zA-Z"']+),([\sa-zA-Z0-9\(\)"',|.\{\}:]+)\)/
     };
+  },
+  computed: {
+    options() {
+      return {
+        input: this.$store.getters['topic/list'].filter(i=> i.type === 'input'),
+        output: this.$store.getters['topic/list'].filter(i=> i.type === 'output'),
+      }
+    }
   },
   methods: {
     createPipeline: function () {
@@ -107,24 +126,13 @@ export default {
         console.log(formName);
         this.$refs[formName].resetFields();
     }
+  },
+   beforeCreate () {
+    this.$store.dispatch('topic/find');
   }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1, h2 {
-  font-weight: normal;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
 </style>

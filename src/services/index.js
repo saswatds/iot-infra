@@ -4,6 +4,7 @@ const {Pipeline} = require('./pipeline'),
   { Service } = require('feathers-mongoose'),
   PipelineModel = require('../models/pipeline'),
   LogModel = require('../models/log'),
+  TopicModel = require('../models/topic'),
   logger = require('winston');
 
 module.exports = function (app) {
@@ -13,6 +14,7 @@ module.exports = function (app) {
 
   // Setup the log service
   app.use('/log', new Service({Model: LogModel, lean: true}));
+  app.use('/topic', new Service({Model: TopicModel, lean: true}));
 
   const mqtt = new MQTT(app.get('mqtt'), app);
   const pipeline = new Pipeline({Model: PipelineModel, lean: true}, mqtt);

@@ -2,30 +2,25 @@ const mqtt = require('mqtt'),
   logger = require('winston'),
   _ = require('lodash'),
   async = require('async'),
-  OPP_TOPICS = ['log'];
-
-const  context = Object.create({
-  _: _,
-  async: async,
-  process: null,
-  __filename: null,
-  __dirname: null,
-  console: null,
-  exports: null,
-  global: null,
-  module: null,
-  require: null
-});
+  OPP_TOPICS = ['log', 'store'];
 
 class MQTT {
   constructor(url, app) {
     this.url = url;
-    this.listeners = {};
+    this.listeners = [];
     this.app = app;
   }
   connect () {
     this.client = mqtt.connect(this.url);
     this.client.on('message', (topic, message)=> {
+      if(topic === 'identity') {
+        // If identity topic then update this topic
+        const parts = message.toString().split(':'),
+          payload = {type: parts[0], topic: parts[1]};
+        parts && parts.length === 2 && this.app.service('topic').find({ query: payload}).then((topic)=> {
+          if(!topic || topic.length === 0) this.app.service('topic').create(payload);
+        });
+      }
       this.process.call(this,topic, message.toString());
     });
 
@@ -38,59 +33,54 @@ class MQTT {
   }
 
   process(topic, message) {
-    const pipelines = this.listeners[topic];
-    if(pipelines && _.isArray(pipelines)) {
+    const pipelines = _.filter(this.listeners, (listener)=> _.includes(listener.input, topic));
+    if(pipelines && _.isArray(pipelines) && pipelines.length) {
       // execute all operations for all pipelines
       // This the place where we can spawn muliple processes, etc, job definations
-      const starterFunction = (cb)=> cb(null, message),
-        parallelPipelines = _(pipelines).map((pipeline)=> {
-          const operations = _.map(pipeline.operations, (opp)=> opp.bind(context)),
-            waterFalls =  _.concat([], starterFunction, operations, this._finalizer.bind(this, pipeline));
-          return async.reflect((cb)=> {
-            async.waterfall(waterFalls,cb);
-          });
-        });
+      const starterFunction = (cb)=> cb(null, { message }),
+        parallelPipelines = _(pipelines).map((pipeline) => {
+          const waterFalls =  _.concat([], starterFunction, pipeline.operations, this._finalizer.bind(this, pipeline));
+          return async.reflect((cb)=> async.waterfall(waterFalls,cb));
+        }).value();
 
-      try {
-        async.parallel(parallelPipelines, (err, results)=> {
-          if(err) {
-            this.app.service('log').create({origin: 'ERROR', message: err.toString()});
-            return logger.error(err);
+      async.parallel(parallelPipelines, (err, results)=> {
+        _.forEach(results, (result)=>{
+          if(result.error) {
+            this.app.service('log').create({origin: 'ERROR', message: result.error.toString()});
+          } else{
+            logger.info('processed topic:', topic, result.value);
           }
-          logger.info('processed topic:', topic, results);
         });
-      } catch (err) {
-        this.app.service('log').create({origin: 'CRITICAL', message: err.toString()});
-        logger.error(err);
-      }
+      });
     }
   }
 
   _finalizer({output, name}, data, cb) {
     const oppOutputs = _.intersection(output, OPP_TOPICS),
-      topicOutputs = _.difference(output, OPP_TOPICS),
-      dataString = data && data.toString && data.toString() || JSON.stringify(data)|| '';
+      topicOutputs = _.difference(output, OPP_TOPICS);
 
-    topicOutputs.forEach((topic)=>this.client.publish(topic, dataString));
-    oppOutputs.forEach((topic)=> {
-      (topic === 'log') && this.app.service('log').create({origin: _.toUpper(name), message: dataString});
+    topicOutputs.forEach((topic) => {
+      const dataString = data[topic] && data[topic].toString && data[topic].toString() || JSON.stringify(data[topic])|| '';
+      this.client.publish(topic, dataString);
     });
-    cb(data);
+    oppOutputs.forEach((topic)=> {
+      (topic === 'log') && this.app.service('log').create({origin: _.toUpper(name), message: data['log'] || 'log property missing'});
+      if (topic === 'store' && data['store']) {
+        const {model, action, data} = data['store'];
+        this.app.service[model][action](data);
+      }
+    });
+    cb(null, data);
   }
 
   updateListener(data) {
-    const { id, name, input, output, operations } = data;
-    _.each(input, (inp)=> {
-      _.isArray(this.listeners[inp]) && _.union(this.listeners[inp], {id,name, operations, output}) ||
-        (this.listeners[inp] = [{id, name, operations, output}]);
-    });
+    this.listeners = _.unionBy(this.listeners, [data], 'id');
   }
 
   removeListener(data) {
-    this.listeners = _.omitBy(this.listeners, (listener)=> {
+    this.listeners = _.remove(this.listeners, (listener)=> {
       return listener.id === data.id;
     });
-    logger.info('removed', this.listeners);
   }
 }
 

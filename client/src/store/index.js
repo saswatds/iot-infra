@@ -11,6 +11,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   plugins: [
     service('pipeline'),
-    service('log')
+    service('log'),
+    service('topic')
   ],
 });
