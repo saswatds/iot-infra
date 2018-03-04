@@ -78,8 +78,8 @@ class MQTT {
   }
 
   removeListener(data) {
-    this.listeners = _.remove(this.listeners, (listener)=> {
-      return listener.id === data.id;
+    _.remove(this.listeners, (listener)=> {
+      return listener.id.toString() === data.id.toString();
     });
   }
 }
