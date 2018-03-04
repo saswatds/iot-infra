@@ -90,7 +90,7 @@ export default {
         code: ''
       },
       mode: false,
-      doneRegx: /done\(([\sa-zA-Z"']+),([\sa-zA-Z0-9\(\)"',|.\{\}:]+)\)/
+      doneRegx: /done\(([\sa-zA-Z"']+),([\w\W]+)\)/
     };
   },
   computed: {
