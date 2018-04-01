@@ -1,8 +1,7 @@
 const mqtt = require('mqtt'),
   logger = require('winston'),
   _ = require('lodash'),
-  async = require('async'),
-  OPP_TOPICS = ['log', 'store'];
+  async = require('async');
 
 class MQTT {
   constructor(url, app) {
@@ -17,10 +16,15 @@ class MQTT {
         // If identity topic then update this topic
         const parts = message.toString().split(':'),
           payload = {type: parts[0], topic: parts[1]};
-        parts && parts.length === 2 && this.app.service('topic').find({ query: payload}).then((topic)=> {
-          if(!topic || topic.length === 0) this.app.service('topic').create(payload);
-        });
+        parts && parts.length === 2 && this.app.service('topic')
+          .find({ query: payload})
+          .then((topic)=> {
+            if(!topic || topic.length === 0) this.app.service('topic').create(payload);
+          });
+      } else {
+        this.app.service('topic').patch(null, {value: message.toString()}, {query: {topic}});
       }
+
       this.process.call(this,topic, message.toString());
     });
 
@@ -33,20 +37,31 @@ class MQTT {
   }
 
   process(topic, message) {
-    const pipelines = _.filter(this.listeners, (listener)=> _.includes(listener.input, topic));
+    const pipelines = _.filter(this.listeners, (listener) => {
+        return _.includes(listener.input, topic);
+      }),
+      starterFunction = (cb)=> {
+        return cb(null, {topic, message});
+      };
+
     if(pipelines && _.isArray(pipelines) && pipelines.length) {
       // execute all operations for all pipelines
-      // This the place where we can spawn muliple processes, etc, job definations
-      const starterFunction = (cb)=> cb(null, { message }),
-        parallelPipelines = _(pipelines).map((pipeline) => {
-          const waterFalls =  _.concat([], starterFunction, pipeline.operations, this._finalizer.bind(this, pipeline));
+      // This the place where we can spawn multiple processes, etc, job definitions
+      const parallelPipelines = _(pipelines)
+        .map((pipeline) => {
+          const waterFalls =_.concat([],
+            starterFunction,
+            pipeline.operations,
+            this._finalizer.bind(this, pipeline));
+
           return async.reflect((cb)=> async.waterfall(waterFalls,cb));
-        }).value();
+        })
+        .value();
 
       async.parallel(parallelPipelines, (err, results)=> {
         _.forEach(results, (result)=>{
           if(result.error) {
-            this.app.service('log').create({origin: 'ERROR', message: result.error.toString()});
+            logger.error(result.error);
           } else{
             logger.info('processed topic:', topic, result.value);
           }
@@ -55,20 +70,10 @@ class MQTT {
     }
   }
 
-  _finalizer({output, name}, data, cb) {
-    const oppOutputs = _.intersection(output, OPP_TOPICS),
-      topicOutputs = _.difference(output, OPP_TOPICS);
-
-    topicOutputs.forEach((topic) => {
+  _finalizer({output}, data, cb) {
+    output.forEach((topic) => {
       const dataString = data[topic] && data[topic].toString && data[topic].toString() || JSON.stringify(data[topic])|| '';
       this.client.publish(topic, dataString);
-    });
-    oppOutputs.forEach((topic)=> {
-      (topic === 'log') && this.app.service('log').create({origin: _.toUpper(name), message: data['log'] || 'log property missing'});
-      if (topic === 'store' && data['store']) {
-        const {model, action, data} = data['store'];
-        this.app.service[model][action](data);
-      }
     });
     cb(null, data);
   }

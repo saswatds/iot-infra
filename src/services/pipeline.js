@@ -5,17 +5,21 @@ const _ = require('lodash'),
 class Pipeline extends Service{
   // Create a pipeline
   constructor (mongooseParams, MQTT) {
-    // Here we will need to acces the
+    // Here we will need to access the
     super(mongooseParams);
     // We get the mqtt service to attach listeners
     this.MQTT = MQTT;
   }
 
   find(params) {
-    return super.find(params).then((data)=> {
-      data.forEach((d)=> this.MQTT.updateListener(this.preprocess(d._id, d)));
-      return Promise.resolve(data);
-    });
+    return super
+      .find(params)
+      .then((data)=> {
+        data.forEach((d)=> {
+          return this.MQTT.updateListener(this.preprocess(d._id, d));
+        });
+        return Promise.resolve(data);
+      });
   }
 
   create(data, params) {
@@ -27,25 +31,32 @@ class Pipeline extends Service{
      *  and even is generated
      */
     const id = uuidv4();
+
     _.set(data, '_id', id);
     this.MQTT.updateListener(this.preprocess(id, data)); // binding not required
+
     return super.create(data, params);
   }
 
   update(id, data, params) {
     this.MQTT.updateListener(this.preprocess(id, data)); // binding not required
+
     return super.update(id, data, params);
   }
 
   patch(id, data, params) {
-    this.get(id).then((sdata)=>{
-      this.MQTT.updateListener(this.preprocess(id, sdata));
-    });
+    this
+      .get(id)
+      .then((sdata)=>{
+        this.MQTT.updateListener(this.preprocess(id, sdata));
+      });
+
     return super.patch(id, data, params);
   }
 
   remove(id, params) {
     this.MQTT.removeListener({id}); // Making interfaces consistent
+
     return super.remove(id, params);
   }
 
@@ -63,6 +74,7 @@ class Pipeline extends Service{
     const mappedFunctions = _.map(operations, (opp)=> {
       return new Function('data', 'done', opp.func || '');
     });
+
     return {id,name, input, output, operations: mappedFunctions};
   }
 }

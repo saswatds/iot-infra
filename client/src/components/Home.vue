@@ -28,8 +28,6 @@
                   multiple
                   filterable
                   placeholder="Choose output topics">
-                  <el-option label="log" value="log"></el-option>
-                  <el-option label="store" value="store"></el-option>
                   <el-option
                     v-for="item in options.output"
                     :key="item.topic"
@@ -59,10 +57,10 @@
           <el-switch
             style="float: right"
             v-model="mode"
-            active-text="Logs"
+            active-text="Devices"
             inactive-text="Pipelines">
           </el-switch>
-          <log v-if="mode"></log>
+          <device v-if="mode"></device>
           <pipeline v-else></pipeline>
         </el-col>
       </el-row>
@@ -73,13 +71,13 @@
 <script>
 import editor from 'vue2-ace-editor'
 import Pipeline from '@/components/Pipeline'
-import Log from '@/components/Log'
+import Device from '@/components/Device'
 export default {
   name: 'Home',
   components: {
     editor,
     Pipeline,
-    Log
+    Device
   },
   data() {
     return {

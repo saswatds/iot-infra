@@ -7,6 +7,9 @@ const TopicSchema = new Schema({
     type: String,
     unique: true
   },
+  value: {
+    type: String
+  }
 });
 
 
